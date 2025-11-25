@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutri-Vision - Text Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #45a049;
+            --secondary: #667eea;
+            --accent: #764ba2;
+            --text: #333;
+            --text-light: #666;
+            --bg-light: #f8f9fa;
+            --border: #ddd;
+            --success: #4CAF50;
+            --error: #f44336;
+            --warning: #ff9800;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            opacity: 0.95;
+            font-size: 1.2rem;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            background: var(--bg-light);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-left: 5px solid var(--primary);
+            transition: transform 0.2s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            color: var(--text);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        textarea,
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            resize: vertical;
+        }
+
+        textarea {
+            min-height: 140px;
+        }
+
+        textarea:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: var(--border);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .results {
+            background: #f1f8e9;
+            border: 2px solid #c8e6c9;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 25px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results-title {
+            color: #2e7d32;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .nutrition-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .nutrition-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .nutrition-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .nutrition-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .nutrition-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .food-items {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .food-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s ease;
+        }
+
+        .food-item:last-child {
+            border-bottom: none;
+        }
+
+        .food-item:hover {
+            background: var(--bg-light);
+        }
+
+        .food-name {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 1.1rem;
+        }
+
+        .food-details {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .food-macros {
+            text-align: right;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .json-output {
+            background: #263238;
+            color: #a5d6a7;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #d32f2f;
+        }
+
+        .alert-warning {
+            background: #fff3e0;
+            border: 1px solid #ffcc02;
+            color: #f57c00;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background-color: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        .status-offline {
+            background-color: var(--error);
+        }
+
+        .api-config {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .examples {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .example-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .nutrition-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .food-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .food-macros {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🥗 Nutri-Vision</h1>
+            <p>ML-Powered Text Nutrition Analysis</p>
+        </div>
+
+        <div class="content">
+            <!-- API Configuration -->
+            <div class="section">
+                <h2 class="section-title">⚙️ API Configuration</h2>
+                <div class="api-config">
+                    <label for="api-url">API Base URL:</label>
+                    <input type="text" id="api-url" value="http://127.0.0.1:8000" placeholder="http://127.0.0.1:8000">
+                </div>
+                <button onclick="checkHealth()">
+                    🔍 Check API Status
+                </button>
+                <div id="health-status"></div>
+            </div>
+
+            <!-- Text Analysis -->
+            <div class="section">
+                <h2 class="section-title">📝 Text Analysis</h2>
+
+                <div class="form-group">
+                    <label for="food-text">Describe your meal:</label>
+                    <textarea id="food-text"
+                        placeholder="Example: I had 2 slices of whole wheat bread, 3 scrambled eggs, 1 banana, and a glass of milk for breakfast">I had 2 slices of whole wheat bread, 3 scrambled eggs, 1 large banana, and 200ml of milk for breakfast</textarea>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="include-usda" checked>
+                        <label for="include-usda">Use USDA nutrition database (more accurate)</label>
+                    </div>
+                </div>
+
+                <div class="examples">
+                    <strong>Quick Examples:</strong><br>
+                    <button class="example-btn"
+                        onclick="setExample('I had 2 apples, 150g grilled chicken, and 1 cup of brown rice')">🍎 Healthy
+                        Meal</button>
+                    <button class="example-btn"
+                        onclick="setExample('Pizza 2 slices, 1 can of coke, and a small salad')">🍕 Fast Food</button>
+                    <button class="example-btn"
+                        onclick="setExample('Oatmeal 1 cup with half banana, handful of blueberries, and almond milk')">🥣
+                        Breakfast</button>
+                    <button class="example-btn"
+                        onclick="setExample('Grilled salmon 200g, steamed broccoli 150g, quinoa 1 cup')">🐟
+                        Dinner</button>
+                </div>
+
+                <div class="button-group">
+                    <button onclick="analyzeText()">
+                        🔬 Analyze Meal
+                    </button>
+                    <button class="btn-secondary" onclick="clearResults('text')">
+                        🗑️ Clear Results
+                    </button>
+                </div>
+
+                <div id="text-results" style="display: none;"></div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <script>
+        function getApiUrl() {
+            return document.getElementById('api-url').value.trim();
+        }
+
+        function setExample(text) {
+            document.getElementById('food-text').value = text;
+        }
+
+        async function checkHealth() {
+            const statusDiv = document.getElementById('health-status');
+            const apiUrl = getApiUrl();
+
+            try {
+                statusDiv.innerHTML = '<div class="alert alert-warning"><div class="loading"></div> Checking API health...</div>';
+
+                const response = await fetch(`${apiUrl}/health`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <span class="status-indicator status-online"></span>
+                            <div>
+                                <strong>API is online!</strong><br>
+                                <small>Version: ${data.version || 'Unknown'} | NLP: ${data.services?.nlp || 'Unknown'} | USDA: ${data.services?.usda || 'Unknown'}</small>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        <span class="status-indicator status-offline"></span>
+                        <div>
+                            <strong>API connection failed!</strong><br>
+                            <small>Error: ${error.message}. Make sure the API is running on ${apiUrl}</small>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function createNutritionSummary(totals) {
+            return `
+                <div class="nutrition-cards">
+                    <div class="nutrition-card">
+                        <div class="nutrition-value">${Math.round(totals.calories)}</div>
+                        <div class="nutrition-label">Calories</div>
+                    </div>
+                    <div class="nutrition-card">
+                        <div class="nutrition-value">${Math.round(totals.protein)}g</div>
+                        <div class="nutrition-label">Protein</div>
+                    </div>
+                    <div class="nutrition-card">
+                        <div class="nutrition-value">${Math.round(totals.carbs)}g</div>
+                        <div class="nutrition-label">Carbs</div>
+                    </div>
+                    <div class="nutrition-card">
+                        <div class="nutrition-value">${Math.round(totals.fats)}g</div>
+                        <div class="nutrition-label">Fats</div>
+                    </div>
+                    ${totals.fiber ? `
+                    <div class="nutrition-card">
+                        <div class="nutrition-value">${Math.round(totals.fiber)}g</div>
+                        <div class="nutrition-label">Fiber</div>
+                    </div>
+                    ` : ''}
+                    ${totals.sugar ? `
+                    <div class="nutrition-card">
+                        <div class="nutrition-value">${Math.round(totals.sugar)}g</div>
+                        <div class="nutrition-label">Sugar</div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function createFoodItemsList(items) {
+            if (!items || items.length === 0) {
+                return '<p>No food items detected</p>';
+            }
+
+            let html = '<div class="food-items">';
+
+            items.forEach(item => {
+                html += `
+                    <div class="food-item">
+                        <div>
+                            <div class="food-name">${item.name}</div>
+                            <div class="food-details">
+                                ${item.quantity} ${item.unit}
+                                ${item.confidence ? ` • ${Math.round(item.confidence * 100)}% confidence` : ''}
+                                ${item.usda_food_id ? ' • USDA verified' : ''}
+                            </div>
+                        </div>
+                        <div class="food-macros">
+                            ${Math.round(item.macros.calories)} cal<br>
+                            P: ${Math.round(item.macros.protein)}g | C: ${Math.round(item.macros.carbs)}g | F: ${Math.round(item.macros.fats)}g
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            return html;
+        }
+
+        async function analyzeText() {
+            const textInput = document.getElementById('food-text').value.trim();
+            const includeUsda = document.getElementById('include-usda').checked;
+            const resultsDiv = document.getElementById('text-results');
+            const apiUrl = getApiUrl();
+
+            if (!textInput) {
+                alert('Please enter a food description');
+                return;
+            }
+
+            try {
+                resultsDiv.style.display = 'block';
+                resultsDiv.innerHTML = '<div class="results"><div class="loading"></div> Analyzing your meal...</div>';
+
+                const response = await fetch(`${apiUrl}/analyze/text`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: textInput,
+                        include_usda: includeUsda
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    let html = '<div class="results">';
+                    html += '<h3 class="results-title">📊 Nutrition Analysis</h3>';
+
+                    // Show warnings
+                    if (data.warnings && data.warnings.length > 0) {
+                        html += '<div class="alert alert-warning">';
+                        data.warnings.forEach(w => html += `⚠️ ${w}<br>`);
+                        html += '</div>';
+                    }
+
+                    // Nutrition summary
+                    html += createNutritionSummary(data.totals);
+
+                    // Food items
+                    html += '<h4 style="margin: 20px 0 10px 0; color: var(--text);">Detected Food Items:</h4>';
+                    html += createFoodItemsList(data.items);
+
+                    // Processing info
+                    html += `<p style="margin-top: 15px; color: var(--text-light); font-size: 0.9rem;">
+                        Processing time: ${data.processing_time}s | Items: ${data.items.length}
+                    </p>`;
+
+                    // JSON output (collapsible)
+                    html += '<details style="margin-top: 15px;"><summary style="cursor: pointer; font-weight: 600; margin-bottom: 10px;">📄 View Raw JSON Response</summary>';
+                    html += `<div class="json-output">${JSON.stringify(data, null, 2)}</div>`;
+                    html += '</details>';
+
+                    html += '</div>';
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="results">
+                            <div class="alert alert-error">
+                                ❌ Analysis failed: ${data.warnings ? data.warnings.join(', ') : 'Unknown error'}
+                            </div>
+                            <div class="json-output">${JSON.stringify(data, null, 2)}</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="results">
+                        <div class="alert alert-error">
+                            ❌ Error: ${error.message}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+
+
+        function clearResults(type) {
+            const resultsDiv = document.getElementById(`${type}-results`);
+            resultsDiv.style.display = 'none';
+            resultsDiv.innerHTML = '';
+        }
+
+        // Auto-check health on load
+        window.addEventListener('load', () => {
+            setTimeout(checkHealth, 1000);
+        });
+    </script>
+</body>
+
+</html>
