@@ -84,13 +84,13 @@ TRAIN_DATA = [
 def train_model(n_iter=50):
     """Train a spaCy NER model with expanded data"""
     # Create a blank 'en' model
-    nlp = spacy.blank("en")
+    model = spacy.blank("en")
     
     # Create the NER component and add it to the pipeline
-    if "ner" not in nlp.pipe_names:
-        ner = nlp.add_pipe("ner", last=True)
+    if "ner" not in model.pipe_names:
+        ner = model.add_pipe("ner", last=True)
     else:
-        ner = nlp.get_pipe("ner")
+        ner = model.get_pipe("ner")
     
     # Add labels
     for _, annotations in TRAIN_DATA:
@@ -99,10 +99,10 @@ def train_model(n_iter=50):
             
     # Disable other pipes during training
     pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
-    other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
+    other_pipes = [pipe for pipe in model.pipe_names if pipe not in pipe_exceptions]
     
-    with nlp.disable_pipes(*other_pipes):
-        optimizer = nlp.begin_training()
+    with model.disable_pipes(*other_pipes):
+        optimizer = model.begin_training()
         
         print(f"Training model for {n_iter} iterations with {len(TRAIN_DATA)} examples...")
         
@@ -112,9 +112,9 @@ def train_model(n_iter=50):
             
             # Batch up the examples using spaCy's minibatch
             for text, annotations in TRAIN_DATA:
-                doc = nlp.make_doc(text)
+                doc = model.make_doc(text)
                 example = Example.from_dict(doc, annotations)
-                nlp.update([example], drop=0.5, losses=losses)
+                model.update([example], drop=0.5, losses=losses)
             
             if (itn + 1) % 10 == 0:
                 print(f"Iteration {itn + 1}, Losses: {losses}")
@@ -123,7 +123,7 @@ def train_model(n_iter=50):
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
         
-    nlp.to_disk(output_dir)
+    model.to_disk(output_dir)
     print(f"Model saved to {output_dir}")
 
 if __name__ == "__main__":

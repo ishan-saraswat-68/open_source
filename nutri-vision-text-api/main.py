@@ -7,13 +7,13 @@ import logging
 import os
 import time
 
-# Import NLP components
+# Import ML components
 try:
-    from nlp.spacy_extractor import spacy_extract as enhanced_extract
-    NLP_AVAILABLE = True
+    from ml.spacy_extractor import spacy_extract as enhanced_extract
+    ML_AVAILABLE = True
 except ImportError as e:
-    print(f"NLP import failed: {e}")
-    NLP_AVAILABLE = False
+    print(f"ML import failed: {e}")
+    ML_AVAILABLE = False
     
     # Fallback: create a dummy function
     def enhanced_extract(text):
@@ -271,7 +271,7 @@ async def process_text_analysis(text: str, include_usda: bool = True) -> List[Fo
         extracted_items = enhanced_extract(text)
         
     except Exception as e:
-        logger.error(f"NLP extraction failed: {e}")
+        logger.error(f"ML extraction failed: {e}")
         return []
     
     if not extracted_items:
@@ -373,10 +373,10 @@ async def root():
     return {
         "name": "Nutri-Vision Text Analysis API",
         "version": "3.0.0",
-        "description": "Text-based nutrition analysis with enhanced NLP",
+        "description": "Text-based nutrition analysis with enhanced ML",
         "status": "running",
         "services": {
-            "nlp": "available" if NLP_AVAILABLE else "basic_mode",
+            "ml": "available" if ML_AVAILABLE else "basic_mode",
             "usda": "configured" if USDA_API_KEY != 'your_usda_api_key_here' else "not_configured"
         },
         "endpoints": {
@@ -394,7 +394,7 @@ async def health_check():
         "version": "3.0.0",
         "services": {
             "api": "active",
-            "nlp": "available" if NLP_AVAILABLE else "basic",
+            "ml": "available" if ML_AVAILABLE else "basic",
             "usda": "configured" if USDA_API_KEY != 'your_usda_api_key_here' else "needs_token"
         }
     }
@@ -416,8 +416,8 @@ async def analyze_text(request: TextAnalysisRequest):
         if not items:
             warnings.append("No food items could be identified")
         
-        if not NLP_AVAILABLE:
-            warnings.append("Using basic extraction (enhanced NLP unavailable)")
+        if not ML_AVAILABLE:
+            warnings.append("Using basic extraction (enhanced ML unavailable)")
             
         if not USDA_API_KEY or USDA_API_KEY == 'your_usda_api_key_here':
             warnings.append("Using estimated nutrition data (USDA API not configured)")
@@ -431,7 +431,7 @@ async def analyze_text(request: TextAnalysisRequest):
             processing_time=processing_time,
             warnings=warnings,
             metadata={
-                "nlp_available": NLP_AVAILABLE,
+                "ml_available": ML_AVAILABLE,
                 "usda_configured": USDA_API_KEY != 'your_usda_api_key_here',
                 "usda_lookup_enabled": request.include_usda,
                 "items_with_usda": sum(1 for item in items if item.usda_food_id),
@@ -461,9 +461,9 @@ async def get_configuration():
     return {
         "version": "3.0.0",
         "services": {
-            "nlp_module": {
-                "available": NLP_AVAILABLE,
-                "status": "enhanced" if NLP_AVAILABLE else "basic"
+            "ml_module": {
+                "available": ML_AVAILABLE,
+                "status": "enhanced" if ML_AVAILABLE else "basic"
             },
             "usda_api": {
                 "configured": USDA_API_KEY != 'your_usda_api_key_here',
@@ -486,7 +486,7 @@ if __name__ == "__main__":
     logger.info("Starting Nutri-Vision Text Analysis API v3.0.0")
     logger.info("="*60)
     logger.info(f"🚀 Server: http://localhost:{port}")
-    logger.info(f"📝 NLP: {'✅ Enhanced' if NLP_AVAILABLE else '⚠️ Basic mode'}")
+    logger.info(f"📝 ML: {'✅ Enhanced' if ML_AVAILABLE else '⚠️ Basic mode'}")
     logger.info(f"🥗 USDA: {'✅ Configured' if USDA_API_KEY != 'your_usda_api_key_here' else '❌ Not configured'}")
     logger.info("="*60)
     

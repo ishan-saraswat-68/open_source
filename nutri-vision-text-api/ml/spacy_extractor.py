@@ -9,12 +9,12 @@ MODEL_DIR = Path(__file__).parent / "model"
 
 # Load model if it exists, otherwise return None
 try:
-    nlp = spacy.load(MODEL_DIR)
+    model = spacy.load(MODEL_DIR)
     MODEL_LOADED = True
 except Exception as e:
     print(f"Warning: Could not load spaCy model from {MODEL_DIR}: {e}")
     MODEL_LOADED = False
-    nlp = None
+    model = None
 
 # Unit normalization mapping
 UNIT_ALIASES = {
@@ -220,11 +220,11 @@ def spacy_extract(text: str) -> List[Dict[str, Any]]:
     Extract food items using the trained spaCy NER model.
     Returns list of items with real confidence scores.
     """
-    if not MODEL_LOADED or not nlp:
+    if not MODEL_LOADED or not model:
         print("SpaCy model not loaded, returning empty list.")
         return []
 
-    doc = nlp(text)
+    doc = model(text)
     
     # Get all entities
     entities = list(doc.ents)
